@@ -1,0 +1,129 @@
+#!/bin/bash
+# vim:sw=4:ts=4:et
+<<INFO
+SCRIPYT:test.sh
+AUTHOR:运维@小兵<邮箱号>
+DATE:2020-04-21
+DESCRIBE:描述脚本主要功能
+SYSTEM:CentOS7/RedHat7
+WARNING:警告信息
+VERSION:1.1.0<可选>
+MODIFY:记录修改信息，方便查看和维护
+INFO
+
+# set +e            #关闭异常退出功能
+# set -x            #打开Debug功能
+[ `whoami` != "root" ] && echo "######## Please Use root Install......" && exit 71
+######################定义变量######################
+WORKDIR=$(cd `dirname $0`;pwd)		#脚本所在路径
+function_dir=${WORKDIR}/myfunction.lib
+
+#输出信息
+echo "$(date "+%Y-%m-%d %H:%M:%S")[ERROR] Invalid Param"
+echo "$(date "+%Y-%m-%d %H:%M:%S")[INFO] Install Success"
+#加载函数库
+if [ -f "$function_dir" ];then
+ 	source $function_dir
+else
+	echo -e "\033[31m函数库不存在\033[0m"
+	exit 71
+fi
+
+######################功能函数######################
+
+#帮助信息
+Help(){
+	cat << EOF
+virsh_ip version 1.1.0
+Usage: 
+=======================================================================
+optional arguments:
+	-h	提供帮助信息
+	-num	虚拟机编号
+EXAMPLE:
+	bash virsh_ip.sh -num 10 web1 eth0 192.168.4.1/24	
+EOF
+}
+
+#打印脚本说明
+Print(){
+    cat  << EOF
+#################################################################################
+#1、AUTHOR:
+#2、DATE:2020-01-11
+#3、功能：为ubuntu系统配置本地apt源和网络apt源
+#4、注意事项：配置本地apt源需确保该脚本的同级目录下有正确的离线apt源
+#5、制作离线apt源可参考：https://blog.csdn.net/anqixiang/article/details/100018413
+#################################################################################
+EOF
+}
+#系统版本
+System_Version(){
+    cat << EOF
+1.ubuntu14.04
+2.ubuntu16.04
+3.ubuntu18.04
+EOF
+}
+######################主程序######################
+
+#主函数
+main(){
+    Print
+    cecho 32 "开始执行......"
+    echo "1.本地源"
+    echo "2.网络源"
+    read -p  "请选择:" choice
+    case ${choice} in
+    1)
+        Conf_Apt;;
+    2)
+        echo "1.ubuntu14.04"
+        echo "2.ubuntu16.04"
+        echo "3.ubuntu18.04"
+        read -p "请选择系统版本:" choice
+        case ${choice} in
+        1)
+            Conf_Ubuntu14.04;;
+        2)
+            Conf_Ubuntu16.04;;
+        3)
+            Conf_Ubuntu18.04;;
+        *)
+            cecho 31 "Invalid option!"
+        esac
+        ;;	    
+    *)
+        cecho 31 "Invalid option!"
+    esac		
+}
+main
+
+if [ $# -eq 0 ];then
+    Excute_All
+elif [ "x$1" == "x-c" -a "$#" -eq 2 ];then
+    case $2 in
+    system)
+        Init_System;;
+    *)
+        cecho 31 "Invalid option:bash `basename $0` [-h]"
+    esac
+elif [ "x$1" == "x-h" ];then
+    Help
+else
+    Help && exit 1
+fi
+
+
+[ $# -eq 0 ] && HELP
+while getopts :hnum::a: ARGS
+do
+	case $ARGS in
+	h)
+		HELP;;
+	nu|m)
+		Name=rh7_node$OPTARG;;	
+	\?)
+		cecho 31 "Invalid option:bash `basename $0` [-h]"
+	esac
+done
